@@ -1,5 +1,5 @@
 # Portfolio_Data_Master
-Hi, i'm Lucas, and in this repository i code projects abording data engeering, data analysis and machine learning.
+Hi, i'm Lucas, and on this repository i code projects abording data engeering, data analysis and machine learning.
 All the projects are full describe on my portfolio web site, hosted here on GitHub.
 
 https://lcbarros.github.io/index.html
