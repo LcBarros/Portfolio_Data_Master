@@ -13,9 +13,9 @@ def Extract(mesano, relatorio):
     else:
         URL = "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)"
         if relatorio == "pf":
-            relatorio_numero = "11"
+            relatorio_numero = "\'11\'"
         else:
-            relatorio_numero = "13"
+            relatorio_numero = "\'13\'"
 
     # configura os parametros obrigatórios da api
     if relatorio == "codint":
@@ -28,17 +28,17 @@ def Extract(mesano, relatorio):
         PARAMS = {
         '@AnoMes': mesano, #YYYYMM
         '@TipoInstituicao': 2, #Tipo de Instituição: 1 - Conglomerados Prudenciais e Instituições Independentes, 2 - Conglomerados Financeiros e Instituições Independentes, 3 - Instituições Individuais, 4 - Instituições com Operações de Câmbio
-        '@Relatorio': "\'" + relatorio_numero + "\'", # Carteira de crédito ativa Pessoa Física - modalidade e vencimento
+        '@Relatorio': relatorio_numero, # Carteira de crédito ativa Pessoa Física - modalidade e vencimento
         '$format': 'json'
         }
-
+    
     # chamando função GET e gravando resultado em um objeto
     r = requests.get(url = URL, params = PARAMS)
-
+    
     # analisa de o método GET obteve sucesso
     # em caso de erro retorna o código do erro
     if r.status_code == 200:
-        return("OK", r)
+        return(r)
     else:
         return("NOK")
 
@@ -82,15 +82,22 @@ def Transform(relatorio, r):
             df2['AnoMes'] = pd.to_datetime(df2['AnoMes'], format='%Y%m')
             df2['Saldo'] = df2['Saldo'].round(2)
 
+            # Nova coluna para mapear tipo de carteira de crédito - para juntar os 2 relatorios na mesma tabela
+            if relatorio == 'pf':
+                df2['TipoCarteira'] = df.apply(lambda x: 'pf', axis=1)
+            else:
+                df2['TipoCarteira'] = df.apply(lambda x: 'pj', axis=1)
+
             # Limpeza linhas excedentes
             df2 = df2[df2["NomeColuna"].str.contains("TOTAL") == False]
             # Ajuste no nome das colunas para o script levar ao banco de dados
-            df2 = df2.rename(columns={'CodInst': 'codinst', 'AnoMes': 'anomes', 'Grupo': 'grupo', 'NomeColuna': 'nomecoluna', 'Saldo': 'saldo'})
+            df2 = df2.rename(columns={'CodInst': 'codinst', 'AnoMes': 'anomes', 'Grupo': 'grupo', 'NomeColuna': 'nomecoluna', 'Saldo': 'saldo', 'TipoCarteira': 'tipocarteira'})
             return(df2)
     except:
         return("NOK")
     
 def Load(tabela, df2):
+    df2 = pd.DataFrame.from_records(df2)
     try:
         #Armazenamento
         # Para levar informações ao postgreSQL - local
@@ -132,7 +139,8 @@ def Load(tabela, df2):
                             atividade                           VARCHAR,
                             codconglomeradofinanceiro           VARCHAR,
                             codconglomeradoprudencial           VARCHAR,
-                            situacao                            VARCHAR NOT NULL) ''' 
+                            situacao                            VARCHAR NOT NULL,
+                            tipocarteira                        VARCHAR) ''' 
 
             cur.execute(create_script)
             cur.close()
@@ -152,6 +160,7 @@ def Load(tabela, df2):
     
     else:
     # Insere os dados dentro da tabela criada
+
         df2.to_sql(tabela, engine, if_exists='append', index=False)
         return("OK")
 
