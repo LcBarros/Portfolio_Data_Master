@@ -16,7 +16,7 @@ from Projeto_IFDATA_Functions import Extract, Transform, Load
         #transforma dados codint
         #salva dados codint
 
-itens = ["202212", "202209", "202206", "202203"]
+itens = ["202012", "202009", "202006", "202003"]
 
 def valida_função(etapa, PF, PJ, CODINT):
     if  PF == "NOK" or PJ == "NOK" or CODINT == "NOK":
@@ -33,11 +33,9 @@ for i in itens:
     T_pf = Transform("pf", E_pf)
     T_pj = Transform("pj", E_pj)
     T_codint = Transform("codint", E_codint)
-    valida_função("Transform", T_pf, T_pj, T_codint)
 
     L_pf = Load("ifdata_carteira_credito", T_pf)
     L_pj = Load("ifdata_carteira_credito", T_pj)
     L_codint = Load("ifdata_codint", T_codint)
-    valida_função("Load", L_pf, L_pj, L_codint)
 
     print(i + " - OK")

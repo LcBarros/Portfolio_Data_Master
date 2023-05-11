@@ -91,7 +91,7 @@ def Transform(relatorio, r):
             # Limpeza linhas excedentes
             df2 = df2[df2["NomeColuna"].str.contains("TOTAL") == False]
             # Ajuste no nome das colunas para o script levar ao banco de dados
-            df2 = df2.rename(columns={'CodInst': 'codinst', 'AnoMes': 'anomes', 'Grupo': 'grupo', 'NomeColuna': 'nomecoluna', 'Saldo': 'saldo', 'TipoCarteira': 'tipocarteira'})
+            df2 = df2.rename(columns={'CodInst': 'codinst', 'AnoMes': 'anomes', 'Grupo': 'grupo', 'NomeColuna': 'nomecoluna', 'Saldo': 'saldo', 'TipoCarteira': 'tipo_carteira'})
             return(df2)
     except:
         return("NOK")
@@ -130,7 +130,8 @@ def Load(tabela, df2):
                                         AnoMes          date NOT NULL,
                                         Grupo           VARCHAR NOT NULL,
                                         NomeColuna      VARCHAR NOT NULL,
-                                        Saldo           float  ) '''    
+                                        tipo_carteira    VARCHAR,
+                                        Saldo           float) '''    
             else:
                 create_script = ''' CREATE TABLE IF NOT EXISTS ''' + tabela + ''' (
                             codinst                             VARCHAR NOT NULL,
@@ -139,8 +140,7 @@ def Load(tabela, df2):
                             atividade                           VARCHAR,
                             codconglomeradofinanceiro           VARCHAR,
                             codconglomeradoprudencial           VARCHAR,
-                            situacao                            VARCHAR NOT NULL,
-                            tipocarteira                        VARCHAR) ''' 
+                            situacao                            VARCHAR NOT NULL) ''' 
 
             cur.execute(create_script)
             cur.close()
